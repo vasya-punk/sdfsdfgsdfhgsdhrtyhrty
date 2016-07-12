@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content" android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:weightSum="1">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Tempo"
+                android:id="@+id/textView"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentStart="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Beat"
+                android:id="@+id/textView2"
+                android:layout_alignParentTop="true"
+                android:layout_toEndOf="@+id/tempoPicker"
+                android:layout_marginStart="20dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Repeat"
+                android:id="@+id/textView3"
+                android:layout_alignParentTop="true"
+                android:layout_toEndOf="@+id/tempoPicker"
+                android:layout_marginStart="20dp" />
+
+            <Button
+                android:layout_width="41dp"
+                android:layout_height="wrap_content"
+                android:text="+"
+                android:id="@+id/addConfig" />
+
+        </LinearLayout>
+
+    <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <NumberPicker
+                android:layout_width="50dp"
+                android:layout_height="44dp"
+                android:id="@+id/tempoPicker"
+                android:layout_alignTop="@+id/beatsPicker"
+                android:layout_alignParentStart="true" />
+
+            <NumberPicker
+                android:layout_width="50dp"
+                android:layout_height="44dp"
+                android:id="@+id/beatsPicker"
+                android:layout_below="@+id/textView2"
+                android:layout_alignStart="@+id/textView2"
+                android:layout_marginLeft="5dp" />
+
+            <NumberPicker
+                android:layout_width="50dp"
+                android:layout_height="44dp"
+                android:id="@+id/repeatsPicker"
+                android:layout_below="@+id/textView2"
+                android:layout_alignStart="@+id/textView2"
+                android:layout_marginLeft="5dp" />
+
+        <Button
+            android:layout_width="35dp"
+            android:layout_height="wrap_content"
+            android:text="-"
+            android:id="@+id/removeConfig" />
+
+    </LinearLayout>
+
+    <!--<HorizontalScrollView-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content">-->
+
+        <!--<ScrollView-->
+            <!--android:layout_width="wrap_content"-->
+            <!--android:layout_height="wrap_content">-->
+            <!--<LinearLayout-->
+                <!--android:orientation="horizontal"-->
+                <!--android:layout_width="match_parent"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:id="@+id/accentsLayout"></LinearLayout>-->
+        <!--</ScrollView>-->
+    <!--</HorizontalScrollView>-->
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/my_recycler_view"
+        android:scrollbars="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</LinearLayout>
