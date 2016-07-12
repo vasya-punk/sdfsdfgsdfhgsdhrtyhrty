@@ -2,8 +2,10 @@ package com.example.myapplication2;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.NumberPicker;
 
-import java.util.List;
 import java.util.logging.Logger;
 
 public class Metronome  extends BaseObservable {
@@ -14,21 +16,26 @@ public class Metronome  extends BaseObservable {
 	private double sound = 6440;
 
 
-	private double bpm;
-	private int beat;
+	private double tempo;
+	private int beats;
+
 	private int silence;
 	private final int tick = 1000; // samples of tick
 	
 	private boolean play = true;
+	private LinearLayout configContainer;
+	private int repeats;
+
+	public boolean isPlay(){
+		return play;
+	}
 	
 	private AudioGenerator audioGenerator = new AudioGenerator(8000);
 	private double[] soundTickArray;
 	private double[] soundTockArray;
 	private double[] silenceSoundArray;
 
-	private int currentBeat = 1;
-	private String playBtnLabel;
-	private List<ItemVO> accentDataProvider;
+	private String playBtnLabel = "Start";
 
 	@Bindable
 	public String getPlayBtnLabel(){
@@ -40,6 +47,8 @@ public class Metronome  extends BaseObservable {
 		notifyPropertyChanged(com.example.myapplication2.BR.playBtnLabel);
 	}
 
+	private int currentBeat = 1;
+
 	@Bindable
 	public int getCurrentBeat(){
 		return currentBeat;
@@ -48,18 +57,6 @@ public class Metronome  extends BaseObservable {
 	public void setCurrentBeat(int currentBeat){
 		this.currentBeat = currentBeat;
 		notifyPropertyChanged(com.example.myapplication2.BR.currentBeat);
-	}
-
-	private int currentBeatUI = 1;
-
-	@Bindable
-	public int getCurrentBeatUI(){
-		return currentBeatUI;
-	}
-
-	public void setCurrentBeatUI(int currentBeatUI){
-		this.currentBeatUI = currentBeatUI;
-		notifyPropertyChanged(com.example.myapplication2.BR.currentBeatUI);
 	}
 
 	private int beatsCounter = 0;
@@ -80,9 +77,9 @@ public class Metronome  extends BaseObservable {
 		audioGenerator.createPlayer();
 	}
 	
-	public void calcSilence() {
-		silence = (int) (((60/bpm)*8000)-tick);		
-		soundTickArray = new double[this.tick];	
+	private void calcSilence() {
+		silence = (int) (((60/ tempo)*8000)-tick);
+		soundTickArray = new double[this.tick];
 		soundTockArray = new double[this.tick];
 		silenceSoundArray = new double[this.silence];
 		double[] tick = audioGenerator.getSineWave(this.tick, 8000, beatSound);
@@ -94,59 +91,53 @@ public class Metronome  extends BaseObservable {
 		for(int i=0;i<silence;i++)
 			silenceSoundArray[i] = 0;
 	}
-	
-	public void play() {
-		calcSilence();
-		do {
 
-			if(accents[beatsCounter])
+	private int counterOfConfig;
+	private int counterOfRepeats;
+	public void play() {
+		initVars();
+		calcSilence();
+		counterOfRepeats = 0;
+
+		for (int i = 0; i < accents.length; i++){
+			if(!play) break;
+
+			if(counterOfRepeats == beats * repeats){
+				counterOfConfig++;
+				initVars();
+				calcSilence();
+				counterOfRepeats = 0;
+			}
+
+//			log.info("!!!!!!!!!!! "+beatsCounter+ " = " + accents[beatsCounter]+ " = " + beats + " = " + repeats + " = " + counterOfConfig);
+			if(accents[i])
 				audioGenerator.writeSound(soundTockArray);
 			else
 				audioGenerator.writeSound(soundTickArray);
 
 			audioGenerator.writeSound(silenceSoundArray);
 
-			setCurrentBeat(currentBeat + 1);
-			if(currentBeat > beat)
-				setCurrentBeat(1);
-
-			beatsCounter++;
-			if(beatsCounter > accents.length-1){
-				beatsCounter = accents.length-1;
-			}
-		} while(play);
+			counterOfRepeats++;
+		}
 	}
-	
+
+	private void initVars() {
+		View config = configContainer.getChildAt(counterOfConfig);
+		tempo = ((NumberPicker) config.findViewById(R.id.tempoPicker)).getValue();
+		beats = ((NumberPicker) config.findViewById(R.id.beatsPicker)).getValue();
+		repeats = ((NumberPicker) config.findViewById(R.id.repeatsPicker)).getValue();
+	}
+
 	public void stop() {
 		play = false;
 		audioGenerator.destroyAudioTrack();
-	}
-
-	public double getBpm() {
-		return bpm;
-	}
-
-	public void setBpm(int bpm) {
-		this.bpm = bpm;
-	}
-
-	public int getBeat() {
-		return beat;
-	}
-
-	public void setBeat(int beat) {
-		this.beat = beat;
 	}
 
 	public void setAccents(boolean[] accents) {
 		this.accents = accents;
 	}
 
-	public void setAccentDataProvider(List<ItemVO> accentDataProvider) {
-		this.accentDataProvider = accentDataProvider;
-	}
-
-	public List<ItemVO> getAccentDataProvider() {
-		return accentDataProvider;
+	public void setConfigContainer(LinearLayout configContainer) {
+		this.configContainer = configContainer;
 	}
 }

@@ -68,11 +68,11 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Button b = (Button) v;
-                if (metroTask != null && metroTask.getMetronome().getPlayBtnLabel() == "start" ) {
+                if (metroTask != null && metroTask.getMetronome().getPlayBtnLabel().equals("Stop") ) {
                     stopTimer();
                 } else {
                     resetTimer();
-                    metroTask.getMetronome().setPlayBtnLabel("stop");
+                    metroTask.getMetronome().setPlayBtnLabel("Stop");
                 }
             }
         });
@@ -183,9 +183,11 @@ public class MainActivity extends AppCompatActivity {
             accentsDataProvider.addAll(adapter.getDataSet());
 
             int repeats = ((NumberPicker) config.findViewById(R.id.repeatsPicker)).getValue();
+            int beats = ((NumberPicker) config.findViewById(R.id.beatsPicker)).getValue();
             for (int k = 0; k < repeats; k++) {
-                for (int j = 0; j < accentContainer.getAdapter().getItemCount(); j++) {
-                    accents[cnt] = adapter.getDataSet().get(j).isChecked();
+                for (int j = 0; j < beats; j++) {
+                    if(cnt < lengthOfTicks)
+                        accents[cnt] = adapter.getDataSet().get(j).isChecked();
                     cnt++;
                 }
             }
@@ -194,14 +196,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void stopTimer() {
+        metroTask.getMetronome().setPlayBtnLabel("Start");
+
+        if(!isPlaying) return;
         toggleMetro(false);
 
         counterOfConfig = 0;
         initVars();
-        metroTask.getMetronome().setPlayBtnLabel("start");
     }
     private Thread uiThread;
+    private boolean isPlaying;
     public void toggleMetro(boolean start) {
+        isPlaying = start;
         if (start) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB)
                 metroTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[]) null);
@@ -212,28 +218,26 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             metroTask.stop();
-//            metroTask = new MetronomeAsyncTask();
+            metroTask.cancel(true);
+            metroTask = new MetronomeAsyncTask();
         }
     }
 
     private int repeatsCounter = 1;
     private void startUiThread(){
         final Runnable runn1 = new Runnable() {
-            long time = System.currentTimeMillis();
             int currentBeat = 1;
             @Override
             public void run() {
 
                 log.info(String.valueOf(currentBeat) + " = " + String.valueOf(counterOfConfig) + " = " + String.valueOf(repeats) + " = "+ repeatsCounter + "  !1-------------------------");
 
-                time = System.currentTimeMillis();
-
-                metroTask.getMetronome().setCurrentBeatUI(currentBeat);
+                metroTask.getMetronome().setCurrentBeat(currentBeat);
 
                 int startPoint = 0;
                 if(counterOfConfig > 0){
                     for (int i = 1; i<= counterOfConfig ; i++){
-                        startPoint += arrayLengthOfConfigTicks[counterOfConfig-1];
+                        startPoint += arrayLengthOfConfigTicks[i-1];
                     }
                 }
 
@@ -251,10 +255,6 @@ public class MainActivity extends AppCompatActivity {
                     repeatsCounter++;
                 }
 
-
-//                log.info(String.valueOf(System.currentTimeMillis() - time) + "  1-------------------------");
-
-
                 currentBeat++;
 
             }
@@ -269,24 +269,21 @@ public class MainActivity extends AppCompatActivity {
                     log.info("start uiThread = "+repeats+" = "+ beats);
                     int ticks = repeats * beats;
                     for(int i = 0; i < ticks;i++){
-                        log.info("running uiThread = " + i);
+                        log.info("running uiThread = " + i + " = " + tempo);
                         runOnUiThread(runn1);
-                        TimeUnit.MILLISECONDS.sleep(MINUTE/ tempo);
+                        TimeUnit.MICROSECONDS.sleep(Math.round(MINUTE*1000/ tempo));
                     }
                     log.info("finished uiThread = "+repeats+" = "+ beats);
 
 
                     if (counterOfConfig >= configContainer.getChildCount() - 1) { // the end
                         stopTimer();
-                        metroTask.getMetronome().setCurrentBeatUI(1);
-//                        uiThread.interrupt();
+                        metroTask.getMetronome().setCurrentBeat(1);
                         log.info("  STOP-------------------------");
                         return;
                     } else { // next
                         counterOfConfig++;
                         initVars();
-//                        startUiThread();
-//                        uiThread.interrupt();
                         uiThread.run();
                     }
 
@@ -338,9 +335,6 @@ public class MainActivity extends AppCompatActivity {
         tempo = ((NumberPicker) config.findViewById(R.id.tempoPicker)).getValue();
         beats = ((NumberPicker) config.findViewById(R.id.beatsPicker)).getValue();
         repeats = ((NumberPicker) config.findViewById(R.id.repeatsPicker)).getValue();
-
-        metroTask.setBeat((short) beats);
-        metroTask.setBpm((short) tempo);
     }
 
 
@@ -358,8 +352,7 @@ public class MainActivity extends AppCompatActivity {
     public void onPause() {
         super.onPause();
         toggleMetro(false);
-        Button b = (Button) findViewById(R.id.button);
-        b.setText("start");
+        metroTask.getMetronome().setPlayBtnLabel("Start");
     }
 
     public void onBackPressed() {
@@ -383,35 +376,21 @@ public class MainActivity extends AppCompatActivity {
         }
 
         public void start() {
-            metronome.setBeat(beats);
-            metronome.setBpm(tempo);
+            metronome.setConfigContainer(configContainer);
 
             metronome.setAccents(accents);
-            metronome.setAccentDataProvider(accentsDataProvider);
 
             metronome.play();
-        }
-        public void stop() {
-            metronome.stop();
-        }
-
-        public void setBpm(short bpm) {
-            metronome.setBpm(bpm);
-            metronome.calcSilence();
-        }
-
-        public void setBeat(short beat) {
-            if (metronome != null)
-                metronome.setBeat(beat);
-        }
-
-        public void setAccents(boolean[] accents) {
-            if (metronome != null)
-                metronome.setAccents(accents);
         }
 
         public Metronome getMetronome() {
             return metronome;
+        }
+
+        public void stop() {
+            if(metronome.isPlay()){
+                metronome.stop();
+            }
         }
     }
 
@@ -438,18 +417,9 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(AccentCheckBoxViewHolder holder, int position) {
-            ItemVO item = (ItemVO) mDataset.get(position);
+            ItemVO item = mDataset.get(position);
 
             holder.binding.setItem(item);
-            holder.binding.setClicker(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-//                    if (views != null && views.indexOf(v) != -1) {
-//                        ItemVO item = mDataset.get(views.indexOf(v));
-//                        item.setChecked(isChecked);
-//                    }
-                }
-            });
         }
 
         // Return the size of your dataset (invoked by the layout manager)

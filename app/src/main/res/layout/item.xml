@@ -3,8 +3,6 @@
     <data>
         <variable name="item"
             type="com.example.myapplication2.ItemVO"/>
-        <variable name="clicker"
-            type="android.view.View.OnClickListener"/>
         <import type="android.graphics.Color"/>
     </data>
 <LinearLayout
@@ -17,6 +15,6 @@
         android:id="@+id/accentCheckBox"
         android:checked="@{item.checked}"
         android:background="@{item.currentAccent ? Color.BLUE : 0}"
-        android:onClick="@{clicker}"/>
+        android:onClick="@{item.clicker}"/>
 </LinearLayout>
 </layout>

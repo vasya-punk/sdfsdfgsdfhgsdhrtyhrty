@@ -2,6 +2,7 @@ package com.example.myapplication2;
 
 import android.databinding.BaseObservable;
 import android.databinding.Bindable;
+import android.view.View;
 
 import com.example.myapplication2.BR;
 
@@ -30,4 +31,12 @@ public class ItemVO extends BaseObservable {
 
         notifyPropertyChanged(BR.currentAccent);
     }
+
+    public View.OnClickListener clicker = new View.OnClickListener() {
+        @Override
+        public void onClick(View v)
+        {
+            setChecked(!checked);
+        }
+    };
 }
